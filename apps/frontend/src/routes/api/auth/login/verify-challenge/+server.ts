@@ -1,6 +1,6 @@
 import {
-	verifyAuthenticationResponse,
 	type VerifiedAuthenticationResponse,
+	verifyAuthenticationResponse,
 } from "@simplewebauthn/server";
 import type {
 	AuthenticationResponseJSON,
@@ -19,24 +19,54 @@ export const POST: RequestHandler = async ({
 }) => {
 	const response: AuthenticationResponseJSON = await request.json();
 	const expectedChallenge = session.data.challenge;
+	const challengeType = session.data.challengeType;
+	const challengeExpiresAt = session.data.challengeExpiresAt;
 	const { origin, rpId } = getRequiredEnv();
 
-	if (!expectedChallenge) {
+	const clearChallenge = () => {
+		session.setData({
+			challenge: undefined,
+			challengeType: undefined,
+			challengeExpiresAt: undefined,
+		});
+		session.save();
+	};
+
+	if (!expectedChallenge || challengeType !== "authentication") {
+		clearChallenge();
 		return json(
 			{ error: "No challenge found in session" },
 			{ status: 400, statusText: "Bad Request" },
 		);
 	}
 
+	if (!challengeExpiresAt || challengeExpiresAt < Date.now()) {
+		clearChallenge();
+		return json(
+			{ error: "Challenge expired" },
+			{ status: 400, statusText: "Bad Request" },
+		);
+	}
+
 	const supabase = getSupabase();
 
-	const { data: passkey } = await supabase
+	const { data: passkey, error: passkeyError } = await supabase
 		.from("passkeys")
 		.select("*")
 		.eq("id", response.id)
 		.single<Passkey>();
 
+	if (passkeyError) {
+		console.error("Failed to load passkey:", passkeyError);
+		clearChallenge();
+		return json(
+			{ error: "Failed to load passkey" },
+			{ status: 500, statusText: "Internal Server Error" },
+		);
+	}
+
 	if (!passkey) {
+		clearChallenge();
 		return json(
 			{ error: "Passkey not found" },
 			{ status: 404, statusText: "Not Found" },
@@ -59,6 +89,7 @@ export const POST: RequestHandler = async ({
 			},
 		});
 	} catch (err) {
+		clearChallenge();
 		console.error("Authentication verification failed:", err);
 		return json(
 			{
@@ -71,6 +102,7 @@ export const POST: RequestHandler = async ({
 
 	const { verified } = verification;
 	const { newCounter } = verification.authenticationInfo;
+	clearChallenge();
 
 	if (verified) {
 		await supabase
@@ -78,8 +110,7 @@ export const POST: RequestHandler = async ({
 			.update({ counter: newCounter })
 			.eq("id", passkey.id);
 
-		// Clear challenge after successful authentication
-		session.setData({ userId: passkey.user_id, challenge: undefined });
+		session.setData({ userId: passkey.user_id });
 		session.save();
 	}
 

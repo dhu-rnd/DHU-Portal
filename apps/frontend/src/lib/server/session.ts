@@ -1,13 +1,22 @@
-import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
+import {
+	createCipheriv,
+	createDecipheriv,
+	createHash,
+	randomBytes,
+} from "node:crypto";
 
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 16;
+
+function deriveSessionKey(secret: string): Buffer {
+	return createHash("sha256").update(secret, "utf8").digest();
+}
 
 /**
  * Encrypt session data
  */
 export function encryptSession(data: string, secret: string): string {
-	const key = Buffer.from(secret.padEnd(32, "0").slice(0, 32));
+	const key = deriveSessionKey(secret);
 	const iv = randomBytes(IV_LENGTH);
 	const cipher = createCipheriv(ALGORITHM, key, iv);
 
@@ -30,7 +39,7 @@ export function decryptSession(encrypted: string, secret: string): string {
 			throw new Error("Invalid encrypted format");
 		}
 
-		const key = Buffer.from(secret.padEnd(32, "0").slice(0, 32));
+		const key = deriveSessionKey(secret);
 		const iv = Buffer.from(ivBase64, "base64");
 		const authTag = Buffer.from(authTagBase64, "base64");
 

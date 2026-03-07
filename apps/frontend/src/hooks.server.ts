@@ -5,6 +5,10 @@ import { decryptSession, encryptSession } from "$lib/server/session";
 interface SessionData {
 	userId?: string;
 	challenge?: string;
+	challengeType?: "registration" | "authentication";
+	challengeExpiresAt?: number;
+	pendingUserId?: string;
+	pendingUserName?: string;
 	webauthnUserId?: string;
 }
 
@@ -34,7 +38,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	event.locals.session = {
 		data,
 		setData(newData: SessionData) {
-			data = newData;
+			data = { ...data, ...newData };
 		},
 		save() {
 			const encrypted = encryptSession(JSON.stringify(data), secret);

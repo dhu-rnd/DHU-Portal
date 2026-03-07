@@ -16,11 +16,19 @@ declare global {
 				data: {
 					userId?: string;
 					challenge?: string;
+					challengeType?: "registration" | "authentication";
+					challengeExpiresAt?: number;
+					pendingUserId?: string;
+					pendingUserName?: string;
 					webauthnUserId?: string;
 				};
 				setData(data: {
 					userId?: string;
 					challenge?: string;
+					challengeType?: "registration" | "authentication";
+					challengeExpiresAt?: number;
+					pendingUserId?: string;
+					pendingUserName?: string;
 					webauthnUserId?: string;
 				}): void;
 				save(): void;

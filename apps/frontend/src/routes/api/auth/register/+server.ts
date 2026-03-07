@@ -4,34 +4,24 @@ import type { PublicKeyCredentialCreationOptionsJSON } from "@simplewebauthn/typ
 import { error, json } from "@sveltejs/kit";
 import { uint8ArrayToBase64 } from "$lib/server/crypto";
 import { getRequiredEnv } from "$lib/server/env";
-import { getSupabase } from "$lib/server/supabase";
 import type { RequestHandler } from "./$types";
+
+const REGISTRATION_CHALLENGE_TTL_MS = 5 * 60 * 1000;
 
 export const POST: RequestHandler = async ({
 	request,
 	locals: { session },
 }) => {
 	const body: { username?: string } = await request.json();
-	const userName = body.username;
+	const userName = body.username?.trim();
 
 	if (!userName) return error(400, "Parameter missing");
+	if (userName.length > 64) return error(400, "Username too long");
 
-	const supabase = getSupabase();
-	const userId = createId();
+	const pendingUserId = createId();
 	const { rpName, rpId } = getRequiredEnv();
 
-	const { data: user, error: dbError } = await supabase
-		.from("users")
-		.insert({ id: userId, name: userName })
-		.select()
-		.single();
-
-	if (dbError || !user) {
-		console.error("[register] DB error:", dbError);
-		return error(500, "Failed to create user");
-	}
-
-	const userIdBytes = new TextEncoder().encode(user.id);
+	const userIdBytes = new TextEncoder().encode(pendingUserId);
 	const userIdBase64 = uint8ArrayToBase64(userIdBytes);
 
 	const options: PublicKeyCredentialCreationOptionsJSON =
@@ -50,9 +40,13 @@ export const POST: RequestHandler = async ({
 		});
 
 	session.setData({
-		userId: user.id,
+		userId: undefined,
+		pendingUserId,
+		pendingUserName: userName,
 		webauthnUserId: userIdBase64,
 		challenge: options.challenge,
+		challengeType: "registration",
+		challengeExpiresAt: Date.now() + REGISTRATION_CHALLENGE_TTL_MS,
 	});
 	session.save();
 

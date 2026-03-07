@@ -12,7 +12,7 @@ export function uint8ArrayToBase64(bytes: Uint8Array): string {
 /**
  * Decode Base64 string to Uint8Array
  */
-export function base64ToUint8Array(base64: string): Uint8Array {
+export function base64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
 	const buf = Buffer.from(base64, "base64");
 	const ab = new ArrayBuffer(buf.byteLength);
 	const bytes = new Uint8Array(ab);
