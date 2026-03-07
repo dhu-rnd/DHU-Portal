@@ -10,7 +10,19 @@ declare global {
 		}
 
 		// interface Error {}
-		// interface Locals {}
+
+		interface Locals {
+			session: {
+				data: {
+					userId?: string;
+					challenge?: string;
+				};
+				setData(data: { userId?: string; challenge?: string }): void;
+				save(): void;
+				destroy(): void;
+			};
+		}
+
 		// interface PageData {}
 		// interface PageState {}
 	}
