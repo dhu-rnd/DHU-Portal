@@ -16,8 +16,13 @@ declare global {
 				data: {
 					userId?: string;
 					challenge?: string;
+					webauthnUserId?: string;
 				};
-				setData(data: { userId?: string; challenge?: string }): void;
+				setData(data: {
+					userId?: string;
+					challenge?: string;
+					webauthnUserId?: string;
+				}): void;
 				save(): void;
 				destroy(): void;
 			};

@@ -1,23 +1,17 @@
-import { verifyAuthenticationResponse } from "@simplewebauthn/server";
+import {
+	verifyAuthenticationResponse,
+	type VerifiedAuthenticationResponse,
+} from "@simplewebauthn/server";
 import type {
 	AuthenticationResponseJSON,
 	AuthenticatorTransportFuture,
 } from "@simplewebauthn/types";
 import { json } from "@sveltejs/kit";
-import { env } from "$env/dynamic/public";
+import { base64ToUint8Array } from "$lib/server/crypto";
 import type { Passkey } from "$lib/server/db-types";
+import { getRequiredEnv } from "$lib/server/env";
 import { getSupabase } from "$lib/server/supabase";
 import type { RequestHandler } from "./$types";
-
-function decodePublicKey(base64: string): Uint8Array<ArrayBuffer> {
-	const buf = Buffer.from(base64, "base64");
-	const ab = new ArrayBuffer(buf.byteLength);
-	const bytes = new Uint8Array(ab);
-	for (let i = 0; i < buf.byteLength; i++) {
-		bytes[i] = buf[i];
-	}
-	return bytes;
-}
 
 export const POST: RequestHandler = async ({
 	request,
@@ -25,6 +19,14 @@ export const POST: RequestHandler = async ({
 }) => {
 	const response: AuthenticationResponseJSON = await request.json();
 	const expectedChallenge = session.data.challenge;
+	const { origin, rpId } = getRequiredEnv();
+
+	if (!expectedChallenge) {
+		return json(
+			{ error: "No challenge found in session" },
+			{ status: 400, statusText: "Bad Request" },
+		);
+	}
 
 	const supabase = getSupabase();
 
@@ -34,38 +36,38 @@ export const POST: RequestHandler = async ({
 		.eq("id", response.id)
 		.single<Passkey>();
 
-	if (!expectedChallenge || !passkey)
+	if (!passkey) {
 		return json(
-			{ error: "challenge or user not found" },
+			{ error: "Passkey not found" },
+			{ status: 404, statusText: "Not Found" },
+		);
+	}
+
+	let verification: VerifiedAuthenticationResponse;
+	try {
+		verification = await verifyAuthenticationResponse({
+			response,
+			expectedChallenge,
+			expectedOrigin: origin,
+			expectedRPID: rpId,
+			credential: {
+				id: passkey.id,
+				publicKey: base64ToUint8Array(passkey.public_key),
+				counter: passkey.counter,
+				transports: (passkey.transports?.split(",") ||
+					[]) as AuthenticatorTransportFuture[],
+			},
+		});
+	} catch (err) {
+		console.error("Authentication verification failed:", err);
+		return json(
+			{
+				error: "Verification failed",
+				details: err instanceof Error ? err.message : "Unknown error",
+			},
 			{ status: 400, statusText: "Bad Request" },
 		);
-
-	const verification = await (async () => {
-		try {
-			return await verifyAuthenticationResponse({
-				response,
-				expectedChallenge,
-				expectedOrigin: env.PUBLIC_ORIGIN!,
-				expectedRPID: env.PUBLIC_RP_ID!,
-				credential: {
-					id: passkey.id,
-					publicKey: decodePublicKey(passkey.public_key),
-					counter: passkey.counter,
-					transports: passkey.transports?.split(
-						",",
-					) as AuthenticatorTransportFuture[],
-				},
-			});
-		} catch (err) {
-			console.error(err);
-		}
-	})();
-
-	if (!verification)
-		return json(
-			{ error: "challenge or user not found" },
-			{ status: 400, statusText: "Bad Request" },
-		);
+	}
 
 	const { verified } = verification;
 	const { newCounter } = verification.authenticationInfo;
@@ -76,7 +78,8 @@ export const POST: RequestHandler = async ({
 			.update({ counter: newCounter })
 			.eq("id", passkey.id);
 
-		session.setData({ userId: passkey.user_id });
+		// Clear challenge after successful authentication
+		session.setData({ userId: passkey.user_id, challenge: undefined });
 		session.save();
 	}
 

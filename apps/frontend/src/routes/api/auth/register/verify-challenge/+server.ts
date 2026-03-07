@@ -1,17 +1,13 @@
-import { verifyRegistrationResponse } from "@simplewebauthn/server";
+import {
+	verifyRegistrationResponse,
+	type VerifiedRegistrationResponse,
+} from "@simplewebauthn/server";
 import type { RegistrationResponseJSON } from "@simplewebauthn/types";
 import { json } from "@sveltejs/kit";
-import { env } from "$env/dynamic/public";
+import { uint8ArrayToBase64 } from "$lib/server/crypto";
+import { getRequiredEnv } from "$lib/server/env";
 import { getSupabase } from "$lib/server/supabase";
 import type { RequestHandler } from "./$types";
-
-function uint8ArrayToBase64(bytes: Uint8Array): string {
-	let binary = "";
-	for (const byte of bytes) {
-		binary += String.fromCharCode(byte);
-	}
-	return btoa(binary);
-}
 
 export const POST: RequestHandler = async ({
 	request,
@@ -20,31 +16,33 @@ export const POST: RequestHandler = async ({
 	const registrationResponseJSON: RegistrationResponseJSON =
 		await request.json();
 	const expectedChallenge = session.data.challenge;
+	const { origin, rpId } = getRequiredEnv();
 
-	if (!expectedChallenge)
+	if (!expectedChallenge) {
 		return json(
-			{ error: "Parameters incorrect" },
+			{ error: "No challenge found in session" },
 			{ status: 400, statusText: "Bad Request" },
 		);
+	}
 
-	const verification = await (async () => {
-		try {
-			return await verifyRegistrationResponse({
-				response: registrationResponseJSON,
-				expectedChallenge,
-				expectedOrigin: env.PUBLIC_ORIGIN!,
-				expectedRPID: env.PUBLIC_RP_ID!,
-			});
-		} catch (err) {
-			console.error(err);
-		}
-	})();
-
-	if (!verification)
+	let verification: VerifiedRegistrationResponse;
+	try {
+		verification = await verifyRegistrationResponse({
+			response: registrationResponseJSON,
+			expectedChallenge,
+			expectedOrigin: origin,
+			expectedRPID: rpId,
+		});
+	} catch (err) {
+		console.error("Registration verification failed:", err);
 		return json(
-			{ error: "Challenge verification failed" },
+			{
+				error: "Verification failed",
+				details: err instanceof Error ? err.message : "Unknown error",
+			},
 			{ status: 400, statusText: "Bad Request" },
 		);
+	}
 
 	const { verified, registrationInfo } = verification;
 
@@ -52,13 +50,14 @@ export const POST: RequestHandler = async ({
 		const supabase = getSupabase();
 
 		const userId = session.data.userId ?? "";
+		const webauthnUserId = session.data.webauthnUserId ?? "";
 		const { credential, credentialDeviceType, credentialBackedUp } =
 			registrationInfo;
 
 		const { error: dbError } = await supabase.from("passkeys").insert({
 			id: credential.id,
 			user_id: userId,
-			webauthn_user_id: userId,
+			webauthn_user_id: webauthnUserId,
 			public_key: uint8ArrayToBase64(credential.publicKey),
 			counter: credential.counter,
 			transports: credential.transports?.join(",") ?? null,
@@ -74,7 +73,8 @@ export const POST: RequestHandler = async ({
 			);
 		}
 
-		session.setData({ userId });
+		// Clear challenge after successful registration
+		session.setData({ userId, challenge: undefined, webauthnUserId: undefined });
 		session.save();
 	}
 

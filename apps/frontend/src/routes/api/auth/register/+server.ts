@@ -2,7 +2,8 @@ import { createId } from "@paralleldrive/cuid2";
 import { generateRegistrationOptions } from "@simplewebauthn/server";
 import type { PublicKeyCredentialCreationOptionsJSON } from "@simplewebauthn/types";
 import { error, json } from "@sveltejs/kit";
-import { env } from "$env/dynamic/public";
+import { uint8ArrayToBase64 } from "$lib/server/crypto";
+import { getRequiredEnv } from "$lib/server/env";
 import { getSupabase } from "$lib/server/supabase";
 import type { RequestHandler } from "./$types";
 
@@ -17,6 +18,7 @@ export const POST: RequestHandler = async ({
 
 	const supabase = getSupabase();
 	const userId = createId();
+	const { rpName, rpId } = getRequiredEnv();
 
 	const { data: user, error: dbError } = await supabase
 		.from("users")
@@ -29,12 +31,15 @@ export const POST: RequestHandler = async ({
 		return error(500, "Failed to create user");
 	}
 
+	const userIdBytes = new TextEncoder().encode(user.id);
+	const userIdBase64 = uint8ArrayToBase64(userIdBytes);
+
 	const options: PublicKeyCredentialCreationOptionsJSON =
 		await generateRegistrationOptions({
-			rpName: env.PUBLIC_RP_NAME ?? "DHU Portal",
-			rpID: env.PUBLIC_RP_ID ?? "localhost",
+			rpName,
+			rpID: rpId,
 			userName,
-			userID: new TextEncoder().encode(user.id),
+			userID: userIdBytes,
 			attestationType: "none",
 			excludeCredentials: undefined,
 			authenticatorSelection: {
@@ -46,6 +51,7 @@ export const POST: RequestHandler = async ({
 
 	session.setData({
 		userId: user.id,
+		webauthnUserId: userIdBase64,
 		challenge: options.challenge,
 	});
 	session.save();

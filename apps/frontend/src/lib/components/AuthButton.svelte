@@ -1,6 +1,6 @@
 <script lang="ts">
 import { startAuthentication } from "@simplewebauthn/browser";
-import type { VerifiedRegistrationResponse } from "@simplewebauthn/server";
+import type { VerifiedAuthenticationResponse } from "@simplewebauthn/server";
 import type { PublicKeyCredentialRequestOptionsJSON } from "@simplewebauthn/types";
 import { invalidateAll } from "$app/navigation";
 
@@ -22,7 +22,7 @@ async function login() {
 		optionsJSON: options,
 	});
 
-	const verificationJSON: VerifiedRegistrationResponse = await (
+	const verificationJSON: VerifiedAuthenticationResponse = await (
 		await fetch("/api/auth/login/verify-challenge", {
 			method: "POST",
 			credentials: "same-origin",
@@ -40,6 +40,7 @@ async function login() {
 
 async function logout() {
 	await fetch("/api/auth/logout", {
+		method: "POST",
 		credentials: "same-origin",
 	});
 	await invalidateAll();

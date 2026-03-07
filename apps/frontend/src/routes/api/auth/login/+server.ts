@@ -1,11 +1,13 @@
 import { generateAuthenticationOptions } from "@simplewebauthn/server";
 import { json } from "@sveltejs/kit";
-import { env } from "$env/dynamic/public";
+import { getRequiredEnv } from "$lib/server/env";
 import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async ({ locals: { session } }) => {
+	const { rpId } = getRequiredEnv();
+
 	const options = await generateAuthenticationOptions({
-		rpID: env.PUBLIC_RP_ID!,
+		rpID: rpId,
 		userVerification: "preferred",
 		allowCredentials: [],
 	});

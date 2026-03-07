@@ -1,21 +1,30 @@
 import type { Handle } from "@sveltejs/kit";
 import { env } from "$env/dynamic/private";
+import { decryptSession, encryptSession } from "$lib/server/session";
 
 interface SessionData {
 	userId?: string;
 	challenge?: string;
+	webauthnUserId?: string;
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const secret = env.SESSION_SECRET;
+	if (!secret) {
+		throw new Error(
+			"SESSION_SECRET environment variable is required for session encryption",
+		);
+	}
+
 	const cookieName = "session";
 
-	// Read session from cookie
+	// Read and decrypt session from cookie
 	const raw = event.cookies.get(cookieName);
 	let data: SessionData = {};
 	if (raw) {
+		const decrypted = decryptSession(raw, secret);
 		try {
-			data = JSON.parse(raw);
+			data = JSON.parse(decrypted);
 		} catch {
 			data = {};
 		}
@@ -28,11 +37,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 			data = newData;
 		},
 		save() {
-			event.cookies.set(cookieName, JSON.stringify(data), {
+			const encrypted = encryptSession(JSON.stringify(data), secret);
+			event.cookies.set(cookieName, encrypted, {
 				path: "/",
 				httpOnly: true,
 				sameSite: "lax",
-				secure: false, // set to true in production
+				secure: process.env.NODE_ENV === "production",
 				maxAge: 60 * 60 * 8, // 8 hours
 			});
 		},
