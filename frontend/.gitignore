@@ -1,0 +1,5 @@
+# SvelteKit artifacts
+.svelte-kit
+
+# Cloudflare artifacts
+.wrangler

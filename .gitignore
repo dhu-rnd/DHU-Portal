@@ -1,2 +1,16 @@
 # macOS dummy files
 .DS_Store
+
+# Yarn
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# Node dependencies
+node_modules
+
+# Environment variables
+.env

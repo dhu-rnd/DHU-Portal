@@ -1,0 +1,18 @@
+{
+  "name": "dhu-portal",
+  "version": "0.0.1",
+  "license": "MIT",
+  "private": true,
+  "workspaces": [
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "yarn workspace @dhu-portal/frontend dev",
+    "build": "yarn workspace @dhu-portal/frontend build",
+    "preview": "yarn workspace @dhu-portal/frontend preview"
+  },
+  "packageManager": "yarn@4.13.0",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
