@@ -152,9 +152,9 @@ __metadata:
   linkType: hard
 
 "@cloudflare/workers-types@npm:^4.20250507.0":
-  version: 4.20260306.1
-  resolution: "@cloudflare/workers-types@npm:4.20260306.1"
-  checksum: 10c0/3e6e87655b3b443bea31174f58ba4617d8be1db50d5d451fd6104bfb285f0c87863cabb378cec6059e14787bc243706558f11199b00071da95256dfc7beaf327
+  version: 4.20260307.1
+  resolution: "@cloudflare/workers-types@npm:4.20260307.1"
+  checksum: 10c0/994ef7a35a3d9b32dc514df89f94d47e4e024e91ea8fe35aae432b76f17cd66531da2ef4047709a510780b531405defaab45d3f6dce5585a08b35e4153c1accf
   languageName: node
   linkType: hard
 
@@ -167,9 +167,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@dhu-portal/frontend@workspace:frontend":
+"@dhu-portal/frontend@workspace:apps/frontend":
   version: 0.0.0-use.local
-  resolution: "@dhu-portal/frontend@workspace:frontend"
+  resolution: "@dhu-portal/frontend@workspace:apps/frontend"
   dependencies:
     "@biomejs/biome": "npm:2.4.6"
     "@sveltejs/adapter-cloudflare": "npm:^7.2.6"

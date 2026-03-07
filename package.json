@@ -4,7 +4,7 @@
   "license": "MIT",
   "private": true,
   "workspaces": [
-    "frontend"
+    "apps/frontend"
   ],
   "scripts": {
     "dev": "yarn workspace @dhu-portal/frontend dev",
