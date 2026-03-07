@@ -1,6 +1,9 @@
 # macOS dummy files
 .DS_Store
 
+# Node dependencies
+node_modules
+
 # Yarn
 .yarn/*
 !.yarn/patches
@@ -9,8 +12,8 @@
 !.yarn/sdks
 !.yarn/versions
 
-# Node dependencies
-node_modules
+# Turborepo cache
+.turbo
 
 # Environment variables
 .env

@@ -7,9 +7,14 @@
     "apps/frontend"
   ],
   "scripts": {
-    "dev": "yarn workspace @dhu-portal/frontend dev",
-    "build": "yarn workspace @dhu-portal/frontend build",
-    "preview": "yarn workspace @dhu-portal/frontend preview"
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "preview": "turbo preview",
+    "check": "turbo check",
+    "test": "turbo test"
+  },
+  "devDependencies": {
+    "turbo": "^2.8.14"
   },
   "packageManager": "yarn@4.13.0",
   "engines": {
