@@ -1,7 +1,7 @@
-import type { LayoutServerLoad } from "./$types";
+import { env } from "$env/dynamic/private";
 import type { User } from "$lib/server/db-types";
 import { getSupabase } from "$lib/server/supabase";
-import { env } from "$env/dynamic/private";
+import type { LayoutServerLoad } from "./$types";
 
 export const load: LayoutServerLoad = async ({ locals: { session } }) => {
 	const { userId } = session.data;

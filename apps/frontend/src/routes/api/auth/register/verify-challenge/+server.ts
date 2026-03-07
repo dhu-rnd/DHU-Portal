@@ -6,6 +6,10 @@ import type { RegistrationResponseJSON } from "@simplewebauthn/types";
 import { json } from "@sveltejs/kit";
 import { uint8ArrayToBase64 } from "$lib/server/crypto";
 import { getRequiredEnv } from "$lib/server/env";
+import {
+	isRegistrationRateLimited,
+	recordRegistrationAttempt,
+} from "$lib/server/session";
 import { getSupabase } from "$lib/server/supabase";
 import type { RequestHandler } from "./$types";
 
@@ -13,6 +17,21 @@ export const POST: RequestHandler = async ({
 	request,
 	locals: { session },
 }) => {
+	// Check registration rate limit
+	const rateLimitStatus = isRegistrationRateLimited(session.data);
+	if (rateLimitStatus.limited) {
+		const remainingMinutes = Math.ceil(
+			(rateLimitStatus.remainingMs || 0) / 60000,
+		);
+		return json(
+			{
+				error: "Too many registration attempts",
+				message: `Please wait ${remainingMinutes} minute(s) before trying again.`,
+			},
+			{ status: 429, statusText: "Too Many Requests" },
+		);
+	}
+
 	const registrationResponseJSON: RegistrationResponseJSON =
 		await request.json();
 	const expectedChallenge = session.data.challenge;
@@ -69,6 +88,11 @@ export const POST: RequestHandler = async ({
 		});
 	} catch (err) {
 		clearRegistrationState();
+		// Record failed registration attempt
+		const updatedData = recordRegistrationAttempt(session.data);
+		session.setData(updatedData);
+		session.save();
+
 		console.error("Registration verification failed:", err);
 		return json(
 			{
@@ -122,7 +146,15 @@ export const POST: RequestHandler = async ({
 
 		session.setData({
 			userId: pendingUserId,
+			// Clear registration rate limit on success
+			registrationAttempts: undefined,
+			registrationLastAttempt: undefined,
 		});
+		session.save();
+	} else {
+		// Record failed attempt even if verification returned false
+		const updatedData = recordRegistrationAttempt(session.data);
+		session.setData(updatedData);
 		session.save();
 	}
 

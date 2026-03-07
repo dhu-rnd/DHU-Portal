@@ -10,6 +10,11 @@ import { json } from "@sveltejs/kit";
 import { base64ToUint8Array } from "$lib/server/crypto";
 import type { Passkey } from "$lib/server/db-types";
 import { getRequiredEnv } from "$lib/server/env";
+import {
+	isAuthBlocked,
+	recordAuthFailure,
+	resetAuthFailures,
+} from "$lib/server/session";
 import { getSupabase } from "$lib/server/supabase";
 import type { RequestHandler } from "./$types";
 
@@ -17,6 +22,19 @@ export const POST: RequestHandler = async ({
 	request,
 	locals: { session },
 }) => {
+	// Check for brute-force lockout
+	const lockStatus = isAuthBlocked(session.data);
+	if (lockStatus.blocked) {
+		const remainingMinutes = Math.ceil((lockStatus.remainingMs || 0) / 60000);
+		return json(
+			{
+				error: "Too many failed attempts",
+				message: `Account temporarily locked. Try again in ${remainingMinutes} minute(s).`,
+			},
+			{ status: 429, statusText: "Too Many Requests" },
+		);
+	}
+
 	const response: AuthenticationResponseJSON = await request.json();
 	const expectedChallenge = session.data.challenge;
 	const challengeType = session.data.challengeType;
@@ -90,6 +108,11 @@ export const POST: RequestHandler = async ({
 		});
 	} catch (err) {
 		clearChallenge();
+		// Record authentication failure
+		const updatedData = recordAuthFailure(session.data);
+		session.setData(updatedData);
+		session.save();
+
 		console.error("Authentication verification failed:", err);
 		return json(
 			{
@@ -110,7 +133,14 @@ export const POST: RequestHandler = async ({
 			.update({ counter: newCounter })
 			.eq("id", passkey.id);
 
-		session.setData({ userId: passkey.user_id });
+		// Reset auth failures on successful login
+		const clearedData = resetAuthFailures(session.data);
+		session.setData({ ...clearedData, userId: passkey.user_id });
+		session.save();
+	} else {
+		// Record failure if verification returned false
+		const updatedData = recordAuthFailure(session.data);
+		session.setData(updatedData);
 		session.save();
 	}
 

@@ -10,6 +10,12 @@ interface SessionData {
 	pendingUserId?: string;
 	pendingUserName?: string;
 	webauthnUserId?: string;
+	// Brute-force protection
+	authFailCount?: number;
+	authFailTimestamp?: number;
+	lockedUntil?: number;
+	registrationAttempts?: number;
+	registrationLastAttempt?: number;
 }
 
 export const handle: Handle = async ({ event, resolve }) => {

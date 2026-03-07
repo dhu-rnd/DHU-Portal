@@ -21,6 +21,11 @@ declare global {
 					pendingUserId?: string;
 					pendingUserName?: string;
 					webauthnUserId?: string;
+					authFailCount?: number;
+					authFailTimestamp?: number;
+					lockedUntil?: number;
+					registrationAttempts?: number;
+					registrationLastAttempt?: number;
 				};
 				setData(data: {
 					userId?: string;
@@ -30,6 +35,11 @@ declare global {
 					pendingUserId?: string;
 					pendingUserName?: string;
 					webauthnUserId?: string;
+					authFailCount?: number;
+					authFailTimestamp?: number;
+					lockedUntil?: number;
+					registrationAttempts?: number;
+					registrationLastAttempt?: number;
 				}): void;
 				save(): void;
 				destroy(): void;

@@ -55,3 +55,135 @@ export function decryptSession(encrypted: string, secret: string): string {
 		return "{}";
 	}
 }
+
+// Brute-force protection constants
+const MAX_AUTH_FAILURES = 5;
+const AUTH_LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+const AUTH_FAIL_WINDOW_MS = 30 * 60 * 1000; // 30 minutes
+const MAX_REGISTRATION_ATTEMPTS = 3;
+const REGISTRATION_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+
+interface SessionData {
+	authFailCount?: number;
+	authFailTimestamp?: number;
+	lockedUntil?: number;
+	registrationAttempts?: number;
+	registrationLastAttempt?: number;
+	[key: string]: unknown;
+}
+
+/**
+ * Check if authentication is blocked due to too many failures
+ */
+export function isAuthBlocked(sessionData: SessionData): {
+	blocked: boolean;
+	remainingMs?: number;
+} {
+	const now = Date.now();
+	const lockedUntil = sessionData.lockedUntil;
+
+	if (lockedUntil && lockedUntil > now) {
+		return { blocked: true, remainingMs: lockedUntil - now };
+	}
+
+	return { blocked: false };
+}
+
+/**
+ * Record authentication failure and apply lockout if threshold exceeded
+ */
+export function recordAuthFailure(sessionData: SessionData): SessionData {
+	const now = Date.now();
+	const lastFailTime = sessionData.authFailTimestamp || 0;
+	const failCount = sessionData.authFailCount || 0;
+
+	// Reset counter if outside failure window
+	if (now - lastFailTime > AUTH_FAIL_WINDOW_MS) {
+		return {
+			...sessionData,
+			authFailCount: 1,
+			authFailTimestamp: now,
+			lockedUntil: undefined,
+		};
+	}
+
+	const newFailCount = failCount + 1;
+
+	// Apply lockout if threshold exceeded
+	if (newFailCount >= MAX_AUTH_FAILURES) {
+		return {
+			...sessionData,
+			authFailCount: newFailCount,
+			authFailTimestamp: now,
+			lockedUntil: now + AUTH_LOCKOUT_DURATION_MS,
+		};
+	}
+
+	return {
+		...sessionData,
+		authFailCount: newFailCount,
+		authFailTimestamp: now,
+	};
+}
+
+/**
+ * Reset authentication failure tracking on successful login
+ */
+export function resetAuthFailures(sessionData: SessionData): SessionData {
+	return {
+		...sessionData,
+		authFailCount: undefined,
+		authFailTimestamp: undefined,
+		lockedUntil: undefined,
+	};
+}
+
+/**
+ * Check if registration is rate-limited
+ */
+export function isRegistrationRateLimited(sessionData: SessionData): {
+	limited: boolean;
+	remainingMs?: number;
+} {
+	const now = Date.now();
+	const attempts = sessionData.registrationAttempts || 0;
+	const lastAttempt = sessionData.registrationLastAttempt || 0;
+
+	// Reset counter if outside window
+	if (now - lastAttempt > REGISTRATION_WINDOW_MS) {
+		return { limited: false };
+	}
+
+	if (attempts >= MAX_REGISTRATION_ATTEMPTS) {
+		const windowEnd = lastAttempt + REGISTRATION_WINDOW_MS;
+		return { limited: true, remainingMs: windowEnd - now };
+	}
+
+	return { limited: false };
+}
+
+/**
+ * Record registration attempt
+ */
+export function recordRegistrationAttempt(
+	sessionData: SessionData,
+): SessionData {
+	const now = Date.now();
+	const lastAttempt = sessionData.registrationLastAttempt || 0;
+	const attempts = sessionData.registrationAttempts || 0;
+
+	// Reset counter if outside window
+	if (now - lastAttempt > REGISTRATION_WINDOW_MS) {
+		return {
+			...sessionData,
+			registrationAttempts: 1,
+			registrationLastAttempt: now,
+		};
+	}
+
+	return {
+		...sessionData,
+		registrationAttempts: attempts + 1,
+		registrationLastAttempt: now,
+	};
+}
