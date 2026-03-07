@@ -3,3 +3,6 @@
 
 # Cloudflare artifacts
 .wrangler
+
+# Vitest artifacts
+coverage
