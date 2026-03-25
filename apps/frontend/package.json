@@ -9,10 +9,10 @@
     "build": "vite build",
     "preview": "wrangler dev .svelte-kit/cloudflare/_worker.js --port 4173",
     "test:unit": "vitest --run --coverage",
-    "test": "yarn test:unit",
+    "test": "pnpm test:unit",
     "check:biome": "biome check --write",
     "check:svelte": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-    "check": "yarn check:biome && yarn check:svelte"
+    "check": "pnpm check:biome && pnpm check:svelte"
   },
   "dependencies": {
     "@paralleldrive/cuid2": "^3.3.0",
