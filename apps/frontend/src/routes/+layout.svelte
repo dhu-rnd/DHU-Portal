@@ -7,6 +7,6 @@ let { children } = $props();
 
 <svelte:head>
 	<title>DHU Portal</title>
-	<link rel="icon" href={favicon} />
+	<link rel="icon" href={favicon}>
 </svelte:head>
 {@render children()}
