@@ -7,12 +7,13 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
-    "preview": "wrangler dev .svelte-kit/cloudflare/_worker.js --port 4173",
+    "preview": "vite preview",
     "test:unit": "vitest --run --coverage",
     "test": "pnpm test:unit",
-    "check:biome": "biome check --write",
+    "check:biome": "biome check --write && biome format --fix",
     "check:svelte": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-    "check": "pnpm check:biome && pnpm check:svelte"
+    "check:types": "tsc --noEmit",
+    "check": "pnpm check:biome && pnpm check:types && pnpm check:svelte"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.6",
@@ -22,6 +23,8 @@
     "@tailwindcss/forms": "^0.5.11",
     "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.1.18",
+    "@tsconfig/strictest": "^2.0.8",
+    "@tsconfig/svelte": "^5.0.8",
     "@vitest/coverage-v8": "4.0.18",
     "svelte": "^5.51.0",
     "svelte-check": "^4.4.2",
