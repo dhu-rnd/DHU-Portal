@@ -13,7 +13,7 @@
     "check:biome": "biome check --write",
     "check:svelte": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:types": "tsc --noEmit",
-    "check": "pnpm check:biome && pnpm check:types && pnpm check:svelte"
+    "check": "pnpm check:biome && pnpm check:svelte && pnpm check:types"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.6",
