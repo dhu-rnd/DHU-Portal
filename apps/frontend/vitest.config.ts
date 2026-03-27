@@ -9,6 +9,7 @@ export default defineConfig({
 				extends: "./vite.config.ts",
 				test: {
 					name: "client",
+					environment: "jsdom",
 					include: ["src/**/*.svelte.test.ts"],
 					exclude: ["src/lib/server/**"],
 				},
