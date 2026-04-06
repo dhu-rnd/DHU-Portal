@@ -12,3 +12,4 @@ pnpm-debug.log
 
 # Environment variables
 .env
+ref/
