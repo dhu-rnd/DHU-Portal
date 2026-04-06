@@ -1,6 +1,6 @@
 <script lang="ts">
 import "uno.css";
-import "./layout.css";
+import "$lib/layout.css";
 import "@unocss/reset/normalize.css";
 import "@unocss/reset/sanitize/sanitize.css";
 import "@unocss/reset/sanitize/assets.css";
