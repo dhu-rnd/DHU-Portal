@@ -1,9 +1,4 @@
-import {
-	createCipheriv,
-	createDecipheriv,
-	createHash,
-	randomBytes,
-} from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 16;
@@ -64,11 +59,11 @@ const MAX_REGISTRATION_ATTEMPTS = 3;
 const REGISTRATION_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
 
 interface SessionData {
-	authFailCount?: number;
-	authFailTimestamp?: number;
-	lockedUntil?: number;
-	registrationAttempts?: number;
-	registrationLastAttempt?: number;
+	authFailCount?: number | undefined;
+	authFailTimestamp?: number | undefined;
+	lockedUntil?: number | undefined;
+	registrationAttempts?: number | undefined;
+	registrationLastAttempt?: number | undefined;
 	[key: string]: unknown;
 }
 
@@ -165,9 +160,7 @@ export function isRegistrationRateLimited(sessionData: SessionData): {
 /**
  * Record registration attempt
  */
-export function recordRegistrationAttempt(
-	sessionData: SessionData,
-): SessionData {
+export function recordRegistrationAttempt(sessionData: SessionData): SessionData {
 	const now = Date.now();
 	const lastAttempt = sessionData.registrationLastAttempt || 0;
 	const attempts = sessionData.registrationAttempts || 0;

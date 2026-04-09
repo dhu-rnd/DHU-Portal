@@ -6,9 +6,7 @@ export function getRequiredEnv() {
 	const rpName = publicEnv.PUBLIC_RP_NAME || "DHU Portal";
 
 	if (!rpId || !origin) {
-		throw new Error(
-			"Missing required environment variables: PUBLIC_RP_ID and PUBLIC_ORIGIN must be set",
-		);
+		throw new Error("Missing required environment variables: PUBLIC_RP_ID and PUBLIC_ORIGIN must be set");
 	}
 
 	return { rpId, origin, rpName };

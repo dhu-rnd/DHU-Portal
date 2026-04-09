@@ -4,17 +4,13 @@ import type { VerifiedAuthenticationResponse } from "@simplewebauthn/server";
 import type { PublicKeyCredentialRequestOptionsJSON } from "@simplewebauthn/types";
 import { invalidateAll } from "$app/navigation";
 
-const { user }: { user: { id: string; name: string | null } | undefined } =
-	$props();
+const { user }: { user: { id: string; name: string | null } | undefined } = $props();
 
+// biome-ignore lint/correctness/noUnusedVariables: This function is used in the template
 async function login() {
-	const { options } = (await (
-		await fetch("/api/auth/login")
-	)
-		.json()
-		.catch((err) => {
-			console.error(err);
-		})) as { options: PublicKeyCredentialRequestOptionsJSON | null };
+	const { options } = (await (await fetch("/api/auth/login")).json().catch((err) => {
+		console.error(err);
+	})) as { options: PublicKeyCredentialRequestOptionsJSON | null };
 
 	if (!options) return;
 
@@ -38,6 +34,7 @@ async function login() {
 	}
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: This function is used in the template
 async function logout() {
 	await fetch("/api/auth/logout", {
 		method: "POST",
@@ -48,7 +45,7 @@ async function logout() {
 </script>
 
 {#if user?.id}
-	<button onclick={logout}>ログアウトする</button>
+	<button type="button" onclick={logout}>ログアウトする</button>
 {:else}
-	<button onclick={login}>ログインする</button>
+	<button type="button" onclick={login}>ログインする</button>
 {/if}

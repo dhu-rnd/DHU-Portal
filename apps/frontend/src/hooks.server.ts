@@ -21,9 +21,7 @@ interface SessionData {
 export const handle: Handle = async ({ event, resolve }) => {
 	const secret = env.SESSION_SECRET;
 	if (!secret) {
-		throw new Error(
-			"SESSION_SECRET environment variable is required for session encryption",
-		);
+		throw new Error("SESSION_SECRET environment variable is required for session encryption");
 	}
 
 	const cookieName = "session";
@@ -52,7 +50,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 				path: "/",
 				httpOnly: true,
 				sameSite: "lax",
-				secure: process.env.NODE_ENV === "production",
+				secure: process.env["NODE_ENV"] === "production",
 				maxAge: 60 * 60 * 8, // 8 hours
 			});
 		},

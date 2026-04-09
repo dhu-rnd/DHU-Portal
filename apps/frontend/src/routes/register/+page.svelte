@@ -6,6 +6,7 @@ import { goto, invalidateAll } from "$app/navigation";
 
 let username = $state("");
 
+// biome-ignore lint/correctness/noUnusedVariables: This function is used in the template
 async function createPasskey() {
 	if (username === "") {
 		return;
@@ -49,7 +50,7 @@ async function createPasskey() {
 <form action="">
 	<label>
 		ユーザー名
-		<input type="text" required bind:value={username} />
+		<input type="text" required bind:value={username}>
 	</label>
-	<button onclick={ createPasskey } disabled={ username === "" }>登録</button>
+	<button type="button" onclick={createPasskey} disabled={username === ""}>登録</button>
 </form>

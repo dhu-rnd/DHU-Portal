@@ -17,7 +17,7 @@ export function base64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
 	const ab = new ArrayBuffer(buf.byteLength);
 	const bytes = new Uint8Array(ab);
 	for (let i = 0; i < buf.byteLength; i++) {
-		bytes[i] = buf[i];
+		bytes[i] = buf[i]?.valueOf() ?? 0;
 	}
 	return bytes;
 }

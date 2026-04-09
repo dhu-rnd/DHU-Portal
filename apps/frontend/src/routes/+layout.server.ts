@@ -12,11 +12,7 @@ export const load: LayoutServerLoad = async ({ locals: { session } }) => {
 
 	try {
 		const supabase = getSupabase();
-		const { data: user } = await supabase
-			.from("users")
-			.select("*")
-			.eq("id", userId)
-			.single<User>();
+		const { data: user } = await supabase.from("users").select("*").eq("id", userId).single<User>();
 
 		return { user: user ?? undefined };
 	} catch (e) {
