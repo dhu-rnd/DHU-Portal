@@ -1,3 +1,0 @@
-[submodule "ref/misskey"]
-	path = ref/misskey
-	url = https://github.com/misskey-dev/misskey.git
