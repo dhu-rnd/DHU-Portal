@@ -14,9 +14,6 @@ importers:
 
   apps/frontend:
     dependencies:
-      '@fontsource/kiwi-maru':
-        specifier: ^5.2.8
-        version: 5.2.8
       '@fontsource/zen-maru-gothic':
         specifier: ^5.2.8
         version: 5.2.8
@@ -35,6 +32,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.98.0
         version: 2.101.1
+      '@types/node':
+        specifier: ^25.5.0
+        version: 25.5.0
       '@unocss/reset':
         specifier: ^66.6.7
         version: 66.6.7
@@ -541,9 +541,6 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
-
-  '@fontsource/kiwi-maru@5.2.8':
-    resolution: {integrity: sha512-2ENkh90aXGQDmhClqkrIjDpFJ1BQIuVeVKcYQC7ZYKbUcybBdth8mTAIkEPJsfMKc1RX7S63QMr9B+Bk/FtXjA==}
 
   '@fontsource/zen-maru-gothic@5.2.8':
     resolution: {integrity: sha512-6RkH33+rgEJy1hkUdDAf+3PyQ7oUjX3vj7cekmfx/bT/9BEPd07FqrjcGBQDe4uWmUebEKuIZep3phDjsnJ6vA==}
@@ -2389,8 +2386,6 @@ snapshots:
 
   '@esbuild/win32-x64@0.27.4':
     optional: true
-
-  '@fontsource/kiwi-maru@5.2.8': {}
 
   '@fontsource/zen-maru-gothic@5.2.8': {}
 

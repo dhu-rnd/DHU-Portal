@@ -9,6 +9,7 @@ function deriveSessionKey(secret: string): Buffer {
 
 /**
  * Encrypt session data
+ * Format: {iv (base64)}.{authTag (base64)}.{encryptedData (base64)}
  */
 export function encryptSession(data: string, secret: string): string {
 	const key = deriveSessionKey(secret);

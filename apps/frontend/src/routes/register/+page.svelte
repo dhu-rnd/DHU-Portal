@@ -4,18 +4,10 @@ import type { VerifiedRegistrationResponse } from "@simplewebauthn/server";
 import type { PublicKeyCredentialCreationOptionsJSON } from "@simplewebauthn/types";
 import { goto, invalidateAll } from "$app/navigation";
 
-let username = $state("");
-
-// biome-ignore lint/correctness/noUnusedVariables: This function is used in the template
 async function createPasskey() {
-	if (username === "") {
-		return;
-	}
-
 	const { options } = (await (
 		await fetch("/api/auth/register", {
 			method: "POST",
-			body: JSON.stringify({ username }),
 			credentials: "same-origin",
 			headers: { "Content-Type": "application/json" },
 		})
@@ -40,17 +32,60 @@ async function createPasskey() {
 		})
 	).json();
 
-	if (verificationJSON.verified) {
+	if (verificationJSON.verified && verificationJSON.userId) {
 		await invalidateAll();
 		goto("/");
 	}
 }
 </script>
 
-<form action="">
-	<label>
-		ユーザー名
-		<input type="text" required bind:value={username}>
-	</label>
-	<button type="button" onclick={createPasskey} disabled={username === ""}>登録</button>
-</form>
+<div class="container">
+	<h1>パスキー登録</h1>
+	<p>ブラウザで認証器を使用してアカウントを作成します。</p>
+
+	<div class="passkey-register">
+		<button onclick={createPasskey}>
+			パスキーで登録する
+		</button>
+	</div>
+
+	<div class="note">
+		<p>※ 同じデバイスで複数のパスキーを登録できます</p>
+		<p>※ ユーザー名は必要ありません</p>
+	</div>
+</div>
+
+<style>
+.container {
+	max-width: 400px;
+	margin: 0 auto;
+	padding: 2rem;
+	text-align: center;
+}
+
+.passkey-register {
+	margin: 2rem 0;
+}
+
+.passkey-register button {
+	background: #0070f3;
+	color: white;
+	border: none;
+	padding: 1rem 2rem;
+	font-size: 1.1rem;
+	border-radius: 8px;
+	cursor: pointer;
+	width: 100%;
+	transition: background 0.2s;
+}
+
+.passkey-register button:hover {
+	background: #0056b3;
+}
+
+.note {
+	margin-top: 2rem;
+	font-size: 0.9rem;
+	color: #666;
+}
+</style>
