@@ -1,1 +1,2 @@
-// place files you want to import through the `$lib` alias in this folder.
+export { default as ActionButton } from "./components/Button.svelte";
+export { default as ModalWindow } from "./components/ModalWindow.svelte";

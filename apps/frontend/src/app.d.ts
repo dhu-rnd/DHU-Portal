@@ -10,7 +10,42 @@ declare global {
 		}
 
 		// interface Error {}
-		// interface Locals {}
+
+		interface Locals {
+			session: {
+				data: {
+					userId?: string;
+					challenge?: string;
+					challengeType?: "registration" | "authentication";
+					challengeExpiresAt?: number;
+					pendingUserId?: string;
+					pendingUserName?: string;
+					webauthnUserId?: string;
+					authFailCount?: number;
+					authFailTimestamp?: number;
+					lockedUntil?: number;
+					registrationAttempts?: number;
+					registrationLastAttempt?: number;
+				};
+				setData(data: {
+					userId?: string;
+					challenge?: string;
+					challengeType?: "registration" | "authentication";
+					challengeExpiresAt?: number;
+					pendingUserId?: string;
+					pendingUserName?: string;
+					webauthnUserId?: string;
+					authFailCount?: number;
+					authFailTimestamp?: number;
+					lockedUntil?: number;
+					registrationAttempts?: number;
+					registrationLastAttempt?: number;
+				}): void;
+				save(): void;
+				destroy(): void;
+			};
+		}
+
 		// interface PageData {}
 		// interface PageState {}
 	}
